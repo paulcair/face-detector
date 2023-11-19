@@ -1,6 +1,7 @@
 import cv2
 import os
 import time
+import serial
 from kivy.app import App
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.label import Label
@@ -17,6 +18,9 @@ cascade_face_path = os.path.join(script_directory, 'haarcascade_frontalface_defa
 
 # Concatenate the script directory with the Smile XML file name
 cascade_smile_path = os.path.join(script_directory, 'haarcascade_smile.xml')
+
+# Open a connection to the serial port (adjust the port and baud rate as needed)
+ser = serial.Serial('/dev/ttyACM0', 9600)
 
 # Create an App class called FaceDetect
 class FaceDetect(App):
@@ -92,6 +96,11 @@ class FaceDetect(App):
             # Create rectangles around the detected faces and create a different color box around each one
             for (x,y,w,h) in face_coordinates:
                 cv2.rectangle(frame,(x, y),(x+w, y+h),(0,255,0), 3)
+                
+                 # Send face coordinates to Arduino via serial port
+                coordinates_string = f"{x},{y},{w},{h}\n"
+                ser.write(coordinates_string.encode('utf-8'))
+
 
             #Add Label with prompt to press ESC to exit
             cv2.putText(frame, 'PRESS ESC TO EXIT PROGRAM', (40 ,40), fontScale = 2, fontFace = cv2.FONT_HERSHEY_PLAIN, color=(255, 255, 255))
@@ -134,6 +143,10 @@ class FaceDetect(App):
 
                 #Draw a rectangle around the face
                 cv2.rectangle(frame,(x, y),(x+w, y+h),(0,255,0), 3)
+
+                # Send face coordinates to Arduino via serial port
+                coordinates_string = f"{x},{y},{w},{h}\n"
+                ser.write(coordinates_string.encode('utf-8'))
 
                 # Create image the size of each face box
                 the_face = frame[y:y+h, x:x+w]
